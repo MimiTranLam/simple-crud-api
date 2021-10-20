@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createPostHandler,
   updateHandler,
+  updateInfoHandler,
   deleteMatchName,
   readAllData,
 } = require("../controllers/user.controllers");
@@ -12,8 +13,10 @@ router.post("/", createPostHandler);
 
 router.put("/", updateHandler);
 
+router.put("/:id", updateInfoHandler);
+
 router.get("/", readAllData);
 
-router.delete("/:name", deleteMatchName);
+router.delete("/:id", deleteMatchName);
 
 module.exports = router;

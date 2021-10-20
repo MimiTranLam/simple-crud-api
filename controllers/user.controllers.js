@@ -1,6 +1,7 @@
 const fs = require("fs");
 const userController = {};
 
+// create new student document with name and age with unique id. HINT: utilize generateRandomHexString()
 userController.createPostHandler = (req, res, next) => {
   console.log("creating a file");
   console.log(req.body);
@@ -17,46 +18,114 @@ userController.createPostHandler = (req, res, next) => {
 };
 
 userController.updateHandler = (req, res, next) => {
-  console.log("updating thing");
-  console.log(req.body);
+  console.log("updating file");
+
   try {
     let newContent = req.body;
 
+    const crypto = require("crypto");
+    let id = crypto.randomBytes(20).toString('hex');
+    console.log(id);
+    newContent.id = id;
+    
     //read the current file
     const JSONcurrent = fs.readFileSync('db.json', 'utf8');
     let current = JSON.parse(JSONcurrent);
-    console.log(current);
-    current.data.push(newContent);
+    current.push(newContent);
     
     let JSONcontent = JSON.stringify(current);
-    fs.writeFileSync("db.json", JSONcontent);
-    const jsonFile = fs.readFileSync('db.json', 'utf8');
+    fs.writeFileSync('db2.json', JSONcontent);
+    const jsonFile = fs.readFileSync('db2.json', 'utf8');
     const result = JSON.parse(jsonFile);
     return res.status(200).send({ result });
   } catch (error) {
     return next(error);
   }
+
 };
+
+/* GET students. */
+// router.get("/students/:id", function (req, res, next) {
+//   const params = req.params;
+//   console.log(params);
+//   const fs = require('fs');
+//   const rawdata = fs.readFileSync('db.json');
+//   const data = JSON.parse(rawdata);
+//   let getData = data.filter(value => {
+//     return value.id === params.id
+//   });
+//   res.status(200).send(getData);
+// });
+
+userController.updateInfoHandler = (req, res, next) => {
+  try {
+  const result = fs.readFileSync('db2.json', 'utf8');
+  const data = JSON.parse(result);
+  let getData = data.filter(value => { return value.id === req.params.id });
+
+  const newName = req.body.name;
+  getData[0].name = newName;
+
+  const newAge = req.body.age;
+  getData[0].age = newAge;
+
+  let newContent = getData[0];
+
+  // read and push
+  const JSONcurrent = fs.readFileSync('db2.json', 'utf8');
+    let current = JSON.parse(JSONcurrent);
+    current.push(newContent);
+    
+    let JSONcontent = JSON.stringify(current);
+    fs.writeFileSync('db2.json', JSONcontent);
+    const jsonFile = fs.readFileSync('db2.json', 'utf8');
+    const newResult = JSON.parse(jsonFile);
+    return res.status(200).send({ newResult });
+  } catch (error) {
+    return next(error);
+  }
+
+  res.status(200).send(getData);
+};
+
+// router.get("/students", function (req, res, next) {
+
+// }
 
 userController.deleteMatchName = (req, res, next) => {
   console.log("trying to delete");
-  const { name } = req.params;
+  const { id } = req.params;
 
   //read the file => return JSON
-  const database = fs.readFileSync('db.json', 'utf8');
+  const database = fs.readFileSync('db2.json', 'utf8');
   //translate to JS object
-  const jsObject = JSON.parse(database);
+  let jsObject = JSON.parse(database);
   //remove all name match "aaaa"
-  jsObject.data = jsObject.data.filter((e) => e.name !== name);
+  jsObject = jsObject.filter((e) => e.id !== id);
   //then translate to JSON
-  const newData = JSON.stringify(jsObject);
+  let newData = JSON.stringify(jsObject);
   //then write to db.json
-  fs.writeFileSync("db.json", newData);
+  fs.writeFileSync("db2.json", newData);
+  //console.log(newData);
   return res.send("success delete");
 };
 
 userController.readAllData = (req, res, next) => {
-  return res.send("success get");
+    console.log(req.query)
+    let rawdata = fs.readFileSync('db.json', "utf8");
+    let data = JSON.parse(rawdata);
+    if (req.query === undefined) {
+        return res.status(200).send(data);
+    } else if (Object.keys(req.query).length > 0) {
+        let getData = data.filter(value => {return (value.name === req.query.name || value.age === parseInt(req.query.age))});
+        if (req.query.hasOwnProperty("limit")) {
+            let limit = req.query.limit;
+            let limitRes = getData.slice(0, limit);
+            res.send(`Found: ${limitRes.length}, ${limitRes}`)
+        }
+        res.status(200).send(getData);
+        }
+
 };
 
 module.exports = userController;
