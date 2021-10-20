@@ -5,6 +5,7 @@ const userController = {};
 userController.createPostHandler = (req, res, next) => {
   console.log("creating a file");
   console.log(req.body);
+
   const content = req.body;
   try {
     const jsonContent = JSON.stringify(content);
@@ -15,6 +16,7 @@ userController.createPostHandler = (req, res, next) => {
   } catch (error) {
     next(error);
   }
+
 };
 
 userController.updateHandler = (req, res, next) => {
@@ -44,20 +46,8 @@ userController.updateHandler = (req, res, next) => {
 
 };
 
-/* GET students. */
-// router.get("/students/:id", function (req, res, next) {
-//   const params = req.params;
-//   console.log(params);
-//   const fs = require('fs');
-//   const rawdata = fs.readFileSync('db.json');
-//   const data = JSON.parse(rawdata);
-//   let getData = data.filter(value => {
-//     return value.id === params.id
-//   });
-//   res.status(200).send(getData);
-// });
-
 userController.updateInfoHandler = (req, res, next) => {
+
   try {
   const result = fs.readFileSync('db2.json', 'utf8');
   const data = JSON.parse(result);
@@ -85,15 +75,11 @@ userController.updateInfoHandler = (req, res, next) => {
     return next(error);
   }
 
-  res.status(200).send(getData);
 };
-
-// router.get("/students", function (req, res, next) {
-
-// }
 
 userController.deleteMatchName = (req, res, next) => {
   console.log("trying to delete");
+
   const { id } = req.params;
 
   //read the file => return JSON
@@ -108,10 +94,12 @@ userController.deleteMatchName = (req, res, next) => {
   fs.writeFileSync("db2.json", newData);
   //console.log(newData);
   return res.send("success delete");
+
 };
 
 userController.readAllData = (req, res, next) => {
     console.log(req.query)
+
     let rawdata = fs.readFileSync('db.json', "utf8");
     let data = JSON.parse(rawdata);
     if (req.query === undefined) {
