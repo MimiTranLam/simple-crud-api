@@ -13,10 +13,10 @@ router.post("/", createPostHandler);
 
 router.put("/", updateHandler);
 
-router.put("/:id", updateInfoHandler);
+router.patch("/student/:id", updateInfoHandler);
 
 router.get("/", readAllData);
 
-router.delete("/:id", deleteMatchName);
+//router.delete("/:id", deleteMatchName);
 
 module.exports = router;

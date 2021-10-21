@@ -1,10 +1,29 @@
 const fs = require("fs");
 const userController = {};
 
+userController.readAllData = (req, res, next) => {
+    console.log("finding student");
+
+    let rawdata = fs.readFileSync('db.json', "utf8");
+    let data = JSON.parse(rawdata);
+    if (req.query === undefined) {
+        return res.status(200).send(data);
+    } else if (Object.keys(req.query).length > 0) {
+        let getData = data.filter(value => {return (value.name === req.query.name || value.age === parseInt(req.query.age))});
+        if (req.query.hasOwnProperty("limit")) {
+            let limit = req.query.limit;
+            let limitRes = getData.slice(0, limit);
+            // res.send(`Found: ${limitRes.length}, ${JSON.stringify(limitRes)}`)
+            return res.send({data: limitRes});
+        }
+        return res.status(200).send(getData);
+        }
+
+};
+
 // create new student document with name and age with unique id. HINT: utilize generateRandomHexString()
 userController.createPostHandler = (req, res, next) => {
   console.log("creating a file");
-  console.log(req.body);
 
   const content = req.body;
   try {
@@ -20,7 +39,7 @@ userController.createPostHandler = (req, res, next) => {
 };
 
 userController.updateHandler = (req, res, next) => {
-  console.log("updating file");
+  console.log("adding new student, creating id and updating database");
 
   try {
     let newContent = req.body;
@@ -47,30 +66,37 @@ userController.updateHandler = (req, res, next) => {
 };
 
 userController.updateInfoHandler = (req, res, next) => {
+  console.log("finding student by id and updating info");
 
   try {
-  const result = fs.readFileSync('db2.json', 'utf8');
-  const data = JSON.parse(result);
-  let getData = data.filter(value => { return value.id === req.params.id });
+    // find the student with this id
+    const result = fs.readFileSync('db.json', 'utf8');
+    const data = JSON.parse(result);
+    let getData = data.filter(value => { return value.id === req.params.id });
 
-  const newName = req.body.name;
-  getData[0].name = newName;
+    // making new name and age according to req.body content
+    const newName = req.body.name;
+    getData[0].name = newName;
+    const newAge = req.body.age;
+    getData[0].age = newAge;
 
-  const newAge = req.body.age;
-  getData[0].age = newAge;
-
-  let newContent = getData[0];
-
-  // read and push
-  const JSONcurrent = fs.readFileSync('db2.json', 'utf8');
+    // read old database db.json
+    const JSONcurrent = fs.readFileSync('db.json', 'utf8');
     let current = JSON.parse(JSONcurrent);
-    current.push(newContent);
+
+    // find id match in current db.json and replace with new info, while keeping the same index
+    const getMatchIndex = current.findIndex((x) => {
+      return x.id === req.params.id;
+    });
+    let updateContent = getData[0];
+    let newContent = current.splice(getMatchIndex, 1, updateContent);
     
+    // write into db2.json
     let JSONcontent = JSON.stringify(current);
     fs.writeFileSync('db2.json', JSONcontent);
     const jsonFile = fs.readFileSync('db2.json', 'utf8');
     const newResult = JSON.parse(jsonFile);
-    return res.status(200).send({ newResult });
+    return res.status(200).send({ current });
   } catch (error) {
     return next(error);
   }
@@ -78,41 +104,17 @@ userController.updateInfoHandler = (req, res, next) => {
 };
 
 userController.deleteMatchName = (req, res, next) => {
-  console.log("trying to delete");
+  console.log("finding student by id and deleting student info");
 
   const { id } = req.params;
 
-  //read the file => return JSON
   const database = fs.readFileSync('db2.json', 'utf8');
-  //translate to JS object
   let jsObject = JSON.parse(database);
-  //remove all name match "aaaa"
   jsObject = jsObject.filter((e) => e.id !== id);
-  //then translate to JSON
   let newData = JSON.stringify(jsObject);
-  //then write to db.json
   fs.writeFileSync("db2.json", newData);
-  //console.log(newData);
+
   return res.send("success delete");
-
-};
-
-userController.readAllData = (req, res, next) => {
-    console.log(req.query)
-
-    let rawdata = fs.readFileSync('db.json', "utf8");
-    let data = JSON.parse(rawdata);
-    if (req.query === undefined) {
-        return res.status(200).send(data);
-    } else if (Object.keys(req.query).length > 0) {
-        let getData = data.filter(value => {return (value.name === req.query.name || value.age === parseInt(req.query.age))});
-        if (req.query.hasOwnProperty("limit")) {
-            let limit = req.query.limit;
-            let limitRes = getData.slice(0, limit);
-            res.send(`Found: ${limitRes.length}, ${limitRes}`)
-        }
-        res.status(200).send(getData);
-        }
 
 };
 
